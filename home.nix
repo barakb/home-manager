@@ -21,6 +21,11 @@
   nixpkgs.config.allowUnfree = true;
   
   home.packages = with pkgs; [
+    zsh
+    oh-my-zsh
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
     vim
     wget
     curl
@@ -31,22 +36,13 @@
     zoom-us
     pinentry-qt
     gnupg
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
-    # pkgs.hello
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
-
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
+    clang
+    vlc
+    aspell
+    aspellDicts.en
+    aspellDicts.en-computers
+    aspellDicts.he
+    
   ];
 
 
@@ -67,12 +63,30 @@
   
   programs.git = {
     enable = true;
+    package = pkgs.gitAndTools.gitFull;
     userName  = "barakb";
     userEmail = "barak.bar@gmail.com";
     signing = {
       key = "2C4E9D8A942B012A";
       signByDefault = true;
     };
+        extraConfig = {
+      core = { whitespace = "trailing-space,space-before-tab"; };
+      color = { ui = "auto"; };
+      merge = { ff = "only"; };
+      rerere = { enabled = "true"; };
+      rebase = { autoSquash = "true"; };
+      github = { user = "barakb"; };
+    };
+
+    ignores = [
+      "*~"
+      ".idea"
+      ".ipr"
+      "*.swp"
+      ".ccls-cache"
+      "shell.nix"
+    ];
   };
 
 
@@ -97,9 +111,67 @@
     '';
   };
 
- 
 
-  # Other configurations...
+  programs.vscode = {
+    enable = true;  # Enable VS Code
+    enableUpdateCheck = false;  # Disable update check if desired
+    enableExtensionUpdateCheck = false;  # Disable extension update check if desired
+    mutableExtensionsDir = false;  # Prevent writing to the extensions directory
+
+    # List of extensions to install for C and Rust development
+    extensions = with pkgs.vscode-extensions; [
+      ms-vscode.cpptools  # C/C++ IntelliSense and debugging
+#      rust-lang.rust  # Rust language support
+      rust-lang.rust-analyzer  # Rust Analyzer for enhanced development
+#      ms-vscode.rust-test  # Rust test runner
+#      matklad.rust-analyzer  # Rust Analyzer for improved performance
+      ms-vscode-remote.remote-ssh  # SSH support for remote development
+      mhutchie.git-graph  # Visualize Git repositories
+      pkief.material-icon-theme  # Icon theme for better file visibility
+      bierner.markdown-emoji  # Emoji support in Markdown files
+      # Add more extensions as needed
+    ];
+
+    # User settings for VS Code
+    userSettings = {
+      "editor.fontSize" = 16;  # Adjust font size for better readability
+      "editor.fontFamily" = "'Jetbrains Mono', 'monospace'";  # Use a programming-friendly font
+      "editor.formatOnSave" = true;  # Automatically format code on save
+      "editor.tabSize" = 4;  # Set tab size for C and Rust code
+      "rust-analyzer.cargo.loadOutDirsFromCheck" = true;  # Load output directories from Cargo
+      "rust-analyzer.checkOnSave.command" = "clippy";  # Use Clippy for linting
+      "window.zoomLevel" = 0;  # Default zoom level
+      "workbench.startupEditor" = "none";  # No startup editor
+      # Add more settings as needed
+    };
+  };
+
+
+  programs.zsh = {
+    enable = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
+    defaultKeymap = "emacs";
+  };
+
+  programs.zsh.oh-my-zsh = {
+    enable = true;
+    theme = "agnoster";
+  };
+
+  programs.zsh.initExtra = ''
+    POWERLEVEL9K_MODE='nerdfont-complete'
+    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs)
+    POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status root_indicator background_jobs history time)
+    POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
+    POWERLEVEL9K_SHORTEN_STRATEGY="truncate_middle"
+    POWERLEVEL9K_CONTEXT_TEMPLATE="%n@%m"
+    POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="white"
+    POWERLEVEL9K_CONTEXT_DEFAULT_BACKGROUND="blue"
+    POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND="white"
+
+'';
+
 
   
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
