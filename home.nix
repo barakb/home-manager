@@ -1,6 +1,20 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, nixpkgs-unstable, lib, ... }:
+
+let
+
+  system = "x86_64-linux"; # Replace with your system architecture
+  overlay-unstable = final: prev: {
+    unstable = import nixpkgs-unstable {
+      inherit system;
+      config.allowUnfree = true;
+    };
+  };
+
+in
 
 {
+  nixpkgs.overlays = [ overlay-unstable ];
+  
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = "barak";
@@ -26,12 +40,21 @@
     zsh-autosuggestions
     zsh-syntax-highlighting
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    findutils
+    htop
+    mlocate
     vim
+    file
     wget
     curl
     google-chrome
     rustup
-    jetbrains.rust-rover
+#    jetbrains.rust-rover
+    (unstable.jetbrains.plugins.addPlugins pkgs.unstable.jetbrains.rust-rover ["github-copilot"])
+    openssl
+    openssl.dev 
+    pkg-config
+    gnumake
     slack
     zoom-us
     pinentry-qt
@@ -46,6 +69,7 @@
   ];
 
 
+  
   # Enable GPG agent
   programs.gpg = {
     enable = true;
@@ -206,9 +230,16 @@
   #  /etc/profiles/per-user/barak/etc/profile.d/hm-session-vars.sh
   #
   home.sessionVariables = {
-     EDITOR = "emacs";
-  };
+    EDITOR = "emacs";
+    OPENSSL_DIR = "${pkgs.openssl.dev}";
+    PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
+    OPENSSL_LIB_DIR = "${pkgs.openssl.dev}/lib";  # Specify the library directory
+    OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include";  # Specify the include directory
+    OPENSSL_STATIC = "1";  # Enable static linking
+ };
 
+
+  
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 }
